@@ -12,14 +12,11 @@ async function bootstrap() {
   try {
     // Health check
     const healthService = app.get(HealthService);
-    const health = healthService.check();
+    const health = await healthService.check();
     console.log('Health check:', health);
 
-    // Verify database connection
     console.log('Database connection verified');
 
-    // List registered routes
-    const injector = (app as any).get('HttpAdapter' as any);
     console.log('Bootstrap completed successfully');
   } catch (error) {
     console.error('Bootstrap error:', error);

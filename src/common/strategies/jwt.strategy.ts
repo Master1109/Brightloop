@@ -7,20 +7,15 @@ import { ConfigService } from '@nestjs/config';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private configService: ConfigService) {
     super({
-      jwtFromRequest: ExtractJwt.withExtractors([
+      jwtFromRequest: ExtractJwt.fromExtractors([
         (request) => {
           if (!request) return null;
-          const authHeader = request.headers.authorization || '';
-          const token = authHeader.replace('Bearer ', '');
-          if (token) return token;
-
-          // Also check for apiToken pattern used by frontend
-          const authToken = request.headers['authorization']?.toString();
-          if (authToken?.startsWith('Bearer ')) {
-            return authToken.substring(7);
+          const authHeader = request.headers.authorization?.toString() || '';
+          if (authHeader.startsWith('Bearer ')) {
+            return authHeader.substring(7);
           }
 
-          return request?.headers?.['x-api-token'] || null;
+          return request.headers['x-api-token']?.toString() || null;
         },
       ]),
       ignoreExpiration: false,

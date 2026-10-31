@@ -4,7 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
-import * as cors from 'cors';
+import cors from 'cors';
 import * as dotenv from 'dotenv';
 
 // Load environment variables
@@ -21,16 +21,20 @@ async function bootstrap() {
   app.use(helmet());
 
   // CORS
-  const allowedOrigins = [
+  const allowedOrigins = new Set([
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     process.env.NEXTAUTH_URL || 'http://localhost:3000',
-  ];
+    ...(process.env.CORS_ORIGIN || '')
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+  ]);
 
   app.use(
     cors({
       origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (!origin || allowedOrigins.has(origin)) {
           callback(null, true);
         } else {
           callback(new Error('Not allowed by CORS'), false);

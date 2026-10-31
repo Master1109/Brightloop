@@ -21,9 +21,11 @@ import {
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
+    AuthModule,
     TypeOrmModule.forFeature([
       Account,
       Subscription,

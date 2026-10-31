@@ -31,6 +31,7 @@ export class InvoicesService {
   }
 
   private renderInvoiceHtml(invoice: Invoice): string {
+    const invoiceNumber = invoice.invoice_number;
     const plan = invoice.subscription?.plan;
     const subtotal = invoice.subtotal_cents / 100;
     const taxTotal = invoice.tax_total_cents / 100;

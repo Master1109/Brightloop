@@ -51,6 +51,7 @@ async function seed() {
     console.log('Seed completed successfully');
   } catch (error) {
     console.error('Seed error:', error);
+    process.exitCode = 1;
   } finally {
     await app.close();
   }

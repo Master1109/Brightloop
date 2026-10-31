@@ -8,8 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Account } from '../../entities/index';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { RegisterDto } from './dto/register.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
+import { RegisterDto, ResetPasswordDto } from './dto';
 import * as crypto from 'crypto';
 
 interface ResetTokenRecord {
