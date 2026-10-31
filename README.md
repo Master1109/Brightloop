@@ -4,20 +4,35 @@ A modern, high-performance **Subscription & Billing Management System** built wi
 
 ---
 
-## 📸 Screenshots & Showcase
+## 🖼️ Landing Page & Application Previews
 
-### 🚀 Hero & Platform Overview
-![Brightloop Hero Overview](public/landing-hero.webp)
-
-<br/>
-
-### 📊 Full Analytics & Subscription Dashboard
-![Brightloop Full Workspace](public/landing-full.webp)
+### 1. Hero & Overview
+![Hero & Overview](Landing%20pages/img%201.webp)
 
 <br/>
 
-### 💼 Management & Billing Workflow
-![Brightloop Feature Showcase](public/landing-full2.webp)
+### 2. Feature Highlights & Solutions
+![Feature Highlights](Landing%20pages/img%202.png)
+
+<br/>
+
+### 3. Subscription & Billing Analytics
+![Billing Analytics](Landing%20pages/img%203.png)
+
+<br/>
+
+### 4. Interactive Components & Live Metrics
+![Live Metrics](Landing%20pages/img%204.png)
+
+<br/>
+
+### 5. Testimonials & Social Proof
+![Testimonials](Landing%20pages/img%205.png)
+
+<br/>
+
+### 6. FAQ, Pricing & Call to Action
+![FAQ & Call to Action](Landing%20pages/img%206.png)
 
 ---
 
@@ -72,10 +87,14 @@ Brightloop/
 │   ├── forms.tsx         # Entity creation & edit modals
 │   ├── landing.tsx       # Landing page interactive sections
 │   └── workspace.tsx     # Core data tables, filters, and actions
-├── public/               # Public assets & screenshots
-│   ├── landing-hero.webp # Hero section screenshot
-│   ├── landing-full.webp # Workspace dashboard screenshot
-│   └── landing-full2.webp# Secondary dashboard preview
+├── Landing pages/        # Showcase screenshots & landing page assets (img 1 to 6)
+│   ├── img 1.webp
+│   ├── img 2.png
+│   ├── img 3.png
+│   ├── img 4.png
+│   ├── img 5.png
+│   └── img 6.png
+├── public/               # Public assets & static files
 ├── .env.example          # Frontend environment variables template
 ├── next.config.mjs       # Next.js config with API proxy rewrites
 ├── tailwind.config.js    # Tailwind styling configuration
