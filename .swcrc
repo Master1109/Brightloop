@@ -1,0 +1,13 @@
+module.exports = (api, options) => {
+  api.matchFiles('src/**/*.controller.ts');
+  api.matchFiles('src/**/*.service.ts');
+  api.matchFiles('src/**/*.module.ts');
+  api.matchFiles('src/**/*.entity.ts');
+  api.matchFiles('src/entities/**/*.ts');
+
+  return {
+    build: {
+      plugins: ['@codebase/tsc'],
+    },
+  };
+};
