@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [checking, setChecking] = useState(true);
   const continueToRoleHome = async () => {
     const session = await getSession();
-    const role = (session as { role?: Role } | null)?.role;
+    const role = ((session as { role?: string } | null)?.role?.toUpperCase()) as Role | undefined;
     if (role) router.replace(rolePath[role]);
   };
   useEffect(() => { continueToRoleHome().finally(() => setChecking(false)); }, []);

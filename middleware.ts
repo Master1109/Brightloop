@@ -15,7 +15,8 @@ export async function middleware(request: NextRequest) {
     loginUrl.searchParams.set('callbackUrl', request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
-  if (token.role !== requiredRole) return NextResponse.redirect(new URL(rolePath[String(token.role)] || '/', request.url));
+  const tokenRole = String(token.role || '').toUpperCase();
+  if (tokenRole !== requiredRole) return NextResponse.redirect(new URL(rolePath[tokenRole] || '/', request.url));
   return NextResponse.next();
 }
 

@@ -1,5 +1,6 @@
 import '@fontsource-variable/inter';
 import './globals.css';
+import { Providers } from './providers';
 
 export const metadata = {
   title: 'Brightloop — Subscription Analytics & Workspace',
@@ -17,7 +18,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

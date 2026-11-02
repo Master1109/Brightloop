@@ -16,7 +16,7 @@ export function ProtectedWorkspace({ role }: { role: Role }) {
     let active = true;
     getSession().then((session) => {
       if (!active) return;
-      const currentRole = (session as { role?: Role } | null)?.role;
+      const currentRole = ((session as { role?: string } | null)?.role?.toUpperCase()) as Role | undefined;
       if (!currentRole) router.replace('/login');
       else if (currentRole !== role) router.replace(rolePath[currentRole]);
       else setReady(true);
