@@ -1,16 +1,24 @@
 import '@fontsource-variable/inter';
 import './globals.css';
 import { Providers } from './providers';
+import type { Viewport } from 'next';
 
 export const metadata = {
   title: 'Brightloop — Subscription Analytics & Workspace',
   description: 'Boost business with subscription analytics, billing, and customer relationships in one beautifully connected workspace.',
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

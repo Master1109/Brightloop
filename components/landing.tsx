@@ -1,10 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
 import {
-  ArrowRight, ChevronDown, Menu, Play, Plus, Star, X, BarChart3, CreditCard, LineChart,
+  ArrowRight, Check, ChevronDown, Menu, Play, Plus, Star, X, BarChart3, CreditCard, LineChart,
   PieChart, Wallet, Receipt, Landmark, Target, Sparkles, Users, TrendingUp,
 } from 'lucide-react';
 import { CountUp, HeroPanel, Logo, Pixels, Reveal, useInView } from './bl-shared';
+import { Modal } from './ui';
 
 const logos = ['HashiCorp', 'Culture Amp', 'Airwallex', 'Entrata', 'Dataminr', 'Attentive'];
 
@@ -46,6 +47,10 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
   const [open, setOpen] = useState<number | null>(0);
   const [email, setEmail] = useState('');
   const [notified, setNotified] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactSent, setContactSent] = useState(false);
+  const [caseStudyOpen, setCaseStudyOpen] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
   const feat = useInView<HTMLDivElement>(0.25);
   const rec = useInView<HTMLDivElement>(0.3);
   const canc = useInView<HTMLDivElement>(0.3);
@@ -65,10 +70,25 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
     <div className="bl">
       {/* ───────── Nav ───────── */}
       <header className={`bl-nav ${stuck ? 'is-stuck' : ''}`}>
+        <div className="bl-nav-squares" aria-hidden>
+          {Array.from({ length: 8 }, (_, i) => <i key={i} />)}
+        </div>
         <div className="bl-wrap bl-nav-in">
           <Logo onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} />
           <nav className="bl-nav-links" aria-label="Primary">
-            {links.map(([l, h]) => <a key={l} href={h}>{l}</a>)}
+            {links.map(([l, h]) => (
+              <a
+                key={l}
+                href={h}
+                onClick={e => {
+                  e.preventDefault();
+                  const el = document.querySelector(h);
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                {l}
+              </a>
+            ))}
           </nav>
           <div className="bl-nav-cta">
             <button className="bl-link" onClick={onGetStarted}>Sign in</button>
@@ -80,7 +100,20 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
         </div>
         {menu && (
           <div className="bl-drawer">
-            {links.map(([l, h]) => <a key={l} href={h} onClick={() => setMenu(false)}>{l}</a>)}
+            {links.map(([l, h]) => (
+              <a
+                key={l}
+                href={h}
+                onClick={e => {
+                  e.preventDefault();
+                  setMenu(false);
+                  const el = document.querySelector(h);
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                {l}
+              </a>
+            ))}
             <button className="bl-btn bl-btn-dark" onClick={() => { setMenu(false); onGetStarted(); }}>Get started <ArrowRight size={16} /></button>
           </div>
         )}
@@ -89,6 +122,9 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
       {/* ───────── Hero ───────── */}
       <section className="bl-hero">
         <Pixels items={[{ x: '47%', y: '8%', s: 34 }, { x: '3%', y: '26%', s: 26 }, { x: '44%', y: '52%', s: 22 }, { x: '40%', y: '30%', s: 18 }, { x: '8%', y: '70%', s: 30 }]} />
+        <div className="bl-square-burst" aria-hidden>
+          {Array.from({ length: 20 }, (_, i) => <i key={i} />)}
+        </div>
         <div className="bl-wrap bl-hero-grid">
           <div className="bl-hero-copy">
             <Pill>#1 Analytics platform</Pill>
@@ -100,9 +136,9 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
             <p>Brightloop subscription analytics software is the easiest way to get the insights you need to understand your performance and grow recurring revenue.</p>
             <div className="bl-hero-btns">
               <button className="bl-btn bl-btn-dark" onClick={onGetStarted}>Get started</button>
-              <button className="bl-btn bl-btn-light" onClick={onGetStarted}>Contact sales <ArrowRight size={14} /></button>
+              <button className="bl-btn bl-btn-light" onClick={() => setContactOpen(true)}>Contact sales <ArrowRight size={14} /></button>
             </div>
-            <button className="bl-preview" onClick={onGetStarted}>
+            <button className="bl-preview" onClick={() => { const el = document.getElementById('features'); el?.scrollIntoView({ behavior: 'smooth' }); }}>
               <span className="bl-preview-txt">Want to see for yourself? Check out our live preview.</span>
               <span className="bl-play"><Play size={14} fill="currentColor" /></span>
             </button>
@@ -350,8 +386,8 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
               <h2>Learn why your customers cancel subscriptions</h2>
               <p>Start collecting feedback in minutes, see how much revenue you lose to each reason, then send personalised emails that bring customers back.</p>
               <div className="bl-hero-btns">
-                <button className="bl-btn bl-btn-dark bl-btn-sm" onClick={onGetStarted}>View case study</button>
-                <button className="bl-btn bl-btn-light bl-btn-sm" onClick={onGetStarted}>Contact sales <ArrowRight size={13} /></button>
+                <button className="bl-btn bl-btn-dark bl-btn-sm" onClick={() => setCaseStudyOpen(true)}>View case study</button>
+                <button className="bl-btn bl-btn-light bl-btn-sm" onClick={() => setContactOpen(true)}>Contact sales <ArrowRight size={13} /></button>
               </div>
               <blockquote>
                 “The Cancellation Insights feature is a no-brainer. It replaced our in-house solution in under an hour and gives us exactly the insight we need.”
@@ -424,7 +460,7 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
             <Pill>Frequently asked questions</Pill>
             <h2>Questions &amp; answers</h2>
             <p>Can’t find what you’re looking for?</p>
-            <button className="bl-btn bl-btn-dark bl-btn-sm" onClick={onGetStarted}>Contact us</button>
+            <button className="bl-btn bl-btn-dark bl-btn-sm" onClick={() => setContactOpen(true)}>Contact us</button>
           </Reveal>
           <Reveal className="bl-faq-list">
             {faqs.map((f, i) => (
@@ -460,14 +496,80 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
               <p>Subscription analytics and revenue management for modern businesses.</p>
             </div>
             {[
-              { t: 'Features', l: ['Control Center', 'People Insights', 'Smart Dashboards', 'Recover'] },
-              { t: 'Compare', l: ['ProfitWell', 'ChartMogul', 'FirstOffice', 'SaaSOptics'] },
-              { t: 'Company', l: ['About', 'Careers', 'Customers', 'Plans & Pricing'] },
-              { t: 'Support', l: ['Developers', 'Help Center', 'Status'] },
+              {
+                t: 'Features',
+                links: [
+                  { label: 'Control Center', href: '#features' },
+                  { label: 'People Insights', href: '#solutions' },
+                  { label: 'Smart Dashboards', href: '#features' },
+                  { label: 'Recover Churn', href: '#solutions' },
+                ],
+              },
+              {
+                t: 'Solutions',
+                links: [
+                  { label: 'SaaS Analytics', href: '#features' },
+                  { label: 'Case Study', action: () => setCaseStudyOpen(true) },
+                  { label: 'Revenue Growth', href: '#solutions' },
+                  { label: 'Live Preview', href: '#features' },
+                ],
+              },
+              {
+                t: 'Company',
+                links: [
+                  { label: 'About', href: '#solutions' },
+                  { label: 'Customers', href: '#testimonials' },
+                  { label: 'Plans & Pricing', href: '#pricing' },
+                  { label: 'Contact', action: () => setContactOpen(true) },
+                ],
+              },
+              {
+                t: 'Support',
+                links: [
+                  { label: 'FAQ', href: '#faq' },
+                  { label: 'Help Center', href: '#faq' },
+                  { label: 'Contact Support', action: () => setContactOpen(true) },
+                  { label: 'Status', action: () => setStatusOpen(true) },
+                ],
+              },
             ].map(c => (
               <div key={c.t} className="bl-foot-col">
                 <h5>{c.t}</h5>
-                {c.l.map(x => <a key={x} href="#">{x}</a>)}
+                {c.links.map(x =>
+                  x.action ? (
+                    <button
+                      key={x.label}
+                      type="button"
+                      onClick={x.action}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        font: 'inherit',
+                        color: 'inherit',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        display: 'block',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      {x.label}
+                    </button>
+                  ) : (
+                    <a
+                      key={x.label}
+                      href={x.href}
+                      onClick={e => {
+                        e.preventDefault();
+                        const el = document.querySelector(x.href);
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      style={{ display: 'block', marginBottom: '8px' }}
+                    >
+                      {x.label}
+                    </a>
+                  )
+                )}
               </div>
             ))}
           </div>
@@ -478,6 +580,164 @@ export default function Landing({ onGetStarted }: { onGetStarted: () => void }) 
           </div>
         </div>
       </footer>
+
+      {/* ───────── Contact Modal ───────── */}
+      <Modal
+        open={contactOpen}
+        onClose={() => {
+          setContactOpen(false);
+          setContactSent(false);
+        }}
+        title="Contact Brightloop"
+        description="Talk to our sales & support team about your subscription and billing needs."
+      >
+        {contactSent ? (
+          <div style={{ textAlign: 'center', padding: '24px 10px' }}>
+            <div
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                background: '#dcfce7',
+                color: '#16a34a',
+                display: 'grid',
+                placeItems: 'center',
+                margin: '0 auto 16px',
+              }}
+            >
+              <Check size={24} />
+            </div>
+            <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Thank you!</h3>
+            <p style={{ color: '#64748b', fontSize: 14, maxWidth: 360, margin: '0 auto 24px', lineHeight: 1.5 }}>
+              We’ve received your message. One of our specialists will reach out to you within 24 hours.
+            </p>
+            <button
+              className="bl-btn bl-btn-dark"
+              onClick={() => {
+                setContactOpen(false);
+                setContactSent(false);
+              }}
+            >
+              Close
+            </button>
+          </div>
+        ) : (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              setContactSent(true);
+            }}
+            style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+          >
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#475569', marginBottom: 6 }}>
+                Full name
+              </label>
+              <input
+                required
+                placeholder="Your full name"
+                style={{ width: '100%', height: 42, padding: '0 14px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14 }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#475569', marginBottom: 6 }}>
+                Work email
+              </label>
+              <input
+                type="email"
+                required
+                placeholder="you@company.com"
+                style={{ width: '100%', height: 42, padding: '0 14px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14 }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#475569', marginBottom: 6 }}>
+                Inquiry type
+              </label>
+              <select
+                style={{ width: '100%', height: 42, padding: '0 12px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14 }}
+              >
+                <option>Sales & enterprise pricing</option>
+                <option>Customer support</option>
+                <option>Product demo</option>
+                <option>Partnership & integration</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#475569', marginBottom: 6 }}>
+                How can we help?
+              </label>
+              <textarea
+                rows={3}
+                required
+                placeholder="Tell us a little about your business or question..."
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid #cbd5e1', fontSize: 14 }}
+              />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, flexWrap: 'wrap', gap: 10 }}>
+              <span style={{ fontSize: 12, color: '#64748b' }}>
+                Email: <a href="mailto:hello@brightloop.io" style={{ color: '#0f172a', fontWeight: 600 }}>hello@brightloop.io</a>
+              </span>
+              <button type="submit" className="bl-btn bl-btn-dark bl-btn-sm" style={{ padding: '10px 22px' }}>
+                Send message
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* ───────── Case Study Modal ───────── */}
+      <Modal
+        open={caseStudyOpen}
+        onClose={() => setCaseStudyOpen(false)}
+        title="Artemis Group Case Study"
+        description="How Artemis Group cut churn by 32% and saved $140,000 ARR in 30 days."
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, color: '#334155' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, background: '#f8fafc', padding: '16px', borderRadius: 14 }}>
+            <div><b style={{ fontSize: 20, color: '#0f172a', display: 'block' }}>32%</b><small style={{ color: '#64748b' }}>Churn Reduction</small></div>
+            <div><b style={{ fontSize: 20, color: '#0f172a', display: 'block' }}>&lt; 1 hr</b><small style={{ color: '#64748b' }}>Setup Time</small></div>
+            <div><b style={{ fontSize: 20, color: '#0f172a', display: 'block' }}>$140k</b><small style={{ color: '#64748b' }}>Saved Annual ARR</small></div>
+          </div>
+          <p style={{ fontSize: 14, lineHeight: 1.6 }}>
+            Artemis Group previously struggled to understand why users canceled subscriptions. Within one hour of configuring Brightloop Cancellation Insights, they deployed targeted win-back discounts that retained high-value enterprise accounts.
+          </p>
+          <blockquote style={{ borderLeft: '3px solid #6366f1', paddingLeft: 14, margin: '4px 0', fontStyle: 'italic', fontSize: 13, color: '#475569' }}>
+            “Brightloop replaced our custom spreadsheets and internal hacks. We finally know why customers leave and how to bring them back.”
+          </blockquote>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
+            <button className="bl-btn bl-btn-light bl-btn-sm" onClick={() => setCaseStudyOpen(false)}>Close</button>
+            <button className="bl-btn bl-btn-dark bl-btn-sm" onClick={() => { setCaseStudyOpen(false); onGetStarted(); }}>Start free trial</button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ───────── System Status Modal ───────── */}
+      <Modal
+        open={statusOpen}
+        onClose={() => setStatusOpen(false)}
+        title="Brightloop System Status"
+        description="Live operational telemetry and uptime."
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#ecfdf5', color: '#065f46', borderRadius: 12, fontWeight: 600 }}>
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981' }} />
+            All Systems 100% Operational
+          </div>
+          <div style={{ fontSize: 13, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: 6 }}>
+              <span>Subscription Engine</span><b style={{ color: '#16a34a' }}>99.99% Uptime</b>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: 6 }}>
+              <span>REST API & Webhooks</span><b style={{ color: '#16a34a' }}>100% Operational</b>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: 6 }}>
+              <span>Payment Connectors</span><b style={{ color: '#16a34a' }}>99.98% Operational</b>
+            </div>
+          </div>
+          <button className="bl-btn bl-btn-dark bl-btn-sm" style={{ alignSelf: 'flex-end', marginTop: 6 }} onClick={() => setStatusOpen(false)}>Close</button>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -26,7 +26,9 @@ CREATE TABLE IF NOT EXISTS accounts (
     role account_role NOT NULL,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    reset_token VARCHAR(255),
+    reset_expires BIGINT
 );
 
 -- Staff profiles (extends accounts)
@@ -250,6 +252,19 @@ CREATE INDEX IF NOT EXISTS idx_invoice_lines_invoice ON invoice_lines(invoice_id
 CREATE INDEX IF NOT EXISTS idx_payments_invoice ON payments(invoice_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
 CREATE INDEX IF NOT EXISTS idx_discounts_active ON discounts(is_active, start_date, end_date);
+
+
+-- Billing periods (idempotency tracking)
+CREATE TABLE IF NOT EXISTS billing_periods (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    subscription_id UUID REFERENCES subscriptions(id) ON DELETE CASCADE,
+    period DATE NOT NULL,
+    invoice_id UUID REFERENCES invoices(id),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(subscription_id, period)
+);
+
+CREATE INDEX IF NOT EXISTS idx_billing_periods_subscription ON billing_periods(subscription_id);
 
 -- ============================================================================
 -- TRIGGERS FOR updated_at

@@ -385,10 +385,17 @@ async function bootstrap() {
           id: t.id, kind: 'taxes', name: t.name, status: t.is_active ? 'Active' : 'Archived',
           amount: t.rate, data: { applicable_to: t.applicable_to }, created_at: t.created_at
         })),
-        ...quotationTemplates.rows.map(q => ({
+               ...quotationTemplates.rows.map(q => ({
           id: q.id, kind: 'templates', name: q.name, status: 'Active',
           amount: 0, data: { validity_days: q.validity_days }, created_at: q.created_at
-        }))
+        })),
+        ...(account.role !== 'customer' ? (await db.query(
+          'SELECT cp.*, a.email FROM customer_profiles cp JOIN accounts a ON cp.account_id = a.id'
+        )).rows.map((c: any) => ({
+          id: c.id, kind: 'customers', name: c.company_name || c.email, status: 'Active',
+          amount: 0, customer_id: c.id, data: { email: c.email, contact: c.company_name, address: c.billing_address },
+          created_at: c.created_at
+        })) : [])
       ];
 
       // Team members
@@ -575,7 +582,8 @@ async function bootstrap() {
       const { kind } = req.params;
       const account = req.account;
 
-      if (account.role !== 'admin') return res.status(403).json({ error: 'Administrator access required' });
+      if (account.role === 'customer') return res.status(403).json({ error: 'Access denied' });
+      if (['products', 'plans', 'taxes', 'discounts', 'team'].includes(kind) && account.role !== 'admin') return res.status(403).json({ error: 'Administrator access required' });
 
       const body = req.body;
 
@@ -637,6 +645,63 @@ async function bootstrap() {
         return res.json({ ok: true });
       }
 
+            if (kind === 'subscriptions' || kind === 'quotations') {
+        const customerId = body.customer_id;
+        const planId = body.plan_id;
+        if (!customerId || !planId) throw Error('Customer and plan are required');
+        const plan = (await db.query('SELECT * FROM plans WHERE id = $1', [planId])).rows[0];
+        if (!plan) throw Error('Plan not found');
+        const subId = randomUUID();
+        const subNumber = `SUB-${subId.slice(0, 8).toUpperCase()}`;
+        const startDate = body.data?.start_date || new Date().toISOString().slice(0, 10);
+        const expiryDate = body.data?.expiry_date || null;
+        const paymentTerms = body.data?.payment_terms || '14';
+        const status = kind === 'quotations' ? 'quotation' : 'draft';
+        await db.query(
+          `INSERT INTO subscriptions (id, subscription_number, customer_id, plan_id, start_date, expiry_date, payment_terms, status, created_by)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+          [subId, subNumber, customerId, planId, startDate, expiryDate, paymentTerms, status, account.id]
+        );
+        const quantity = Number(body.data?.quantity) || 1;
+        const unitPriceCents = plan.price_cents;
+        const amountCents = unitPriceCents * quantity;
+        await db.query(
+          `INSERT INTO subscription_lines (id, subscription_id, product_id, quantity, unit_price_cents, tax_rate, amount_cents)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [randomUUID(), subId, null, quantity, unitPriceCents, 0, amountCents]
+        );
+        await db.query(
+          'INSERT INTO audit_logs (id, actor_id, action, entity_type, entity_id) VALUES ($1, $2, $3, $4, $5)',
+          [randomUUID(), account.id, 'create', 'subscriptions', subId]
+        );
+        return res.json({ id: subId, name: subNumber });
+      }
+
+      if (kind === 'customers') {
+        const email = z.string().email().parse(body.data?.email || body.email).toLowerCase();
+        const name = body.name || body.data?.contact || email;
+        let accountId: string;
+        const existing = await getAccountByEmail(email);
+        if (existing) {
+          accountId = existing.id;
+          const existingProfile = await getCustomerProfile(accountId);
+          if (existingProfile) throw Error('Customer profile already exists for this email');
+        } else {
+          accountId = randomUUID();
+          const tempPass = randomBytes(16).toString('hex');
+          await db.query(
+            'INSERT INTO accounts (id, email, password_hash, role) VALUES ($1, $2, $3, $4)',
+            [accountId, email, await hash(tempPass, 12), 'customer']
+          );
+        }
+        const profileId = randomUUID();
+        await db.query(
+          'INSERT INTO customer_profiles (id, account_id, company_name, billing_address) VALUES ($1, $2, $3, $4)',
+          [profileId, accountId, name, body.data?.address || null]
+        );
+        return res.json({ id: profileId, name });
+      }
+
       return res.status(400).json({ error: 'Unsupported resource' });
     } catch (e: any) {
       res.status(400).json({ error: e instanceof z.ZodError ? 'Please complete all required fields correctly.' : e.message });
@@ -688,14 +753,39 @@ async function bootstrap() {
         return res.json({ ok: true });
       }
 
-      if (kind === 'invoices') {
-        if (action === 'confirmed' && ['draft'].includes(req.body.currentStatus || '')) {
-          await db.query('UPDATE invoices SET status = \'confirmed\' WHERE id = $1', [id]);
-        } else if (action === 'cancelled' && ['draft', 'confirmed'].includes(req.body.currentStatus || '')) {
-          await db.query('UPDATE invoices SET status = \'cancelled\' WHERE id = $1', [id]);
+            if (kind === 'invoices') {
+        const invoice = (await db.query('SELECT * FROM invoices WHERE id = $1', [id])).rows[0];
+        if (!invoice) throw Error('Invoice not found');
+        const act = String(action || '').toLowerCase();
+        if (act === 'confirmed') {
+          if (invoice.status !== 'draft') throw Error('Can only confirm draft invoices');
+          await db.query("UPDATE invoices SET status = 'confirmed' WHERE id = $1", [id]);
+        } else if (act === 'cancelled') {
+          if (!['draft', 'confirmed'].includes(invoice.status)) throw Error('Cannot cancel this invoice');
+          await db.query('DELETE FROM invoices WHERE id = $1', [id]);
+        } else if (act === 'send') {
+          if (process.env.SMTP_HOST) {
+            const customer = (await db.query(
+              'SELECT a.email FROM customer_profiles cp JOIN accounts a ON cp.account_id = a.id WHERE cp.id = $1',
+              [invoice.customer_id]
+            )).rows[0];
+            if (customer) {
+              await mail().sendMail({
+                from: process.env.MAIL_FROM || 'hello@brightloop.local',
+                to: customer.email,
+                subject: `Invoice ${invoice.invoice_number} from Brightloop`,
+                text: `Your invoice ${invoice.invoice_number} is ready.`
+              });
+            }
+          }
+          await db.query('UPDATE invoices SET sent_at = now() WHERE id = $1', [id]);
         } else {
           throw Error('Invalid invoice action');
         }
+        await db.query(
+          'INSERT INTO audit_logs (id, actor_id, action, entity_type, entity_id) VALUES ($1, $2, $3, $4, $5)',
+          [randomUUID(), account.id, action, 'invoices', id]
+        );
         return res.json({ ok: true });
       }
 
@@ -742,7 +832,8 @@ async function bootstrap() {
 
       // Soft delete or archive based on kind
       if (kind === 'products' || kind === 'plans' || kind === 'taxes' || kind === 'discounts') {
-        const table = { products: 'products', plans: 'plans', taxes: 'tax_rules', discounts: 'discounts' }[kind];
+        const tableMap: Record<string, string> = { products: 'products', plans: 'plans', taxes: 'tax_rules', discounts: 'discounts' };
+        const table = tableMap[kind];
         await db.query(`UPDATE ${table} SET is_active = false WHERE id = $1`, [id]);
       }
 

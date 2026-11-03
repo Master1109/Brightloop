@@ -6,7 +6,7 @@
     "dev": "concurrently --kill-others-on-fail --names frontend,backend --prefix-colors blue,magenta \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "next dev",
     "dev:backend": "npm --prefix backend run dev",
-    "build": "next build",
+    "build": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}\" && next build",
     "start": "next start -p 3000",
     "typecheck": "tsc --noEmit"
   },

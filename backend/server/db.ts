@@ -2,13 +2,38 @@ import { config } from 'dotenv';
 config({ path: '.env' });
 
 import { Pool } from 'pg';
+import { newDb } from 'pg-mem';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { hash } from 'bcryptjs';
 
-export const db = new Pool({ connectionString: process.env.DATABASE_URL });
+const usePgMem = !process.env.DATABASE_URL || (!process.env.DATABASE_URL.includes('neon') && !process.env.DATABASE_URL.includes('postgres://') && !process.env.DATABASE_URL.includes('postgresql://'));
+
+function createDatabase() {
+  if (!usePgMem) {
+    return new Pool({ connectionString: process.env.DATABASE_URL });
+  }
+  const mem = newDb();
+  mem.public.registerFunction({
+    name: 'gen_random_uuid',
+    implementation: () => randomUUID()
+  });
+  try {
+    let schema = readFileSync(join(__dirname, '../database/schema.sql'), 'utf8').replace(/^\uFEFF/, '');
+    const triggerIdx = schema.indexOf('CREATE OR REPLACE FUNCTION');
+    if (triggerIdx !== -1) schema = schema.slice(0, triggerIdx);
+    mem.public.none(schema);
+  } catch (err: any) {
+    console.error('Error initializing in-memory schema:', err.message);
+  }
+  return new (mem.adapters.createPg().Pool)();
+}
+
+export const db: Pool = createDatabase();
 
 // Legacy exports for compatibility
-export const demo = false;
+export const demo = usePgMem;
 export const entities = ['products','plans','customers','templates','subscriptions','quotations','invoices','payments','taxes','discounts','team'] as const;
 export type Entity = typeof entities[number];
 
@@ -63,18 +88,14 @@ export function nextBillingDate(date: string, frequency: string, anchorDay?: num
 // ============================================================================
 
 export async function init() {
-  // Run schema.sql (already applied to Neon, but keep for reference)
-  // Tables already exist in Neon
+  if (usePgMem) {
+    console.log('Using pg-mem for local development');
+  }
 
   // Seed only if accounts table is empty
   const existing = await db.query('SELECT id FROM accounts LIMIT 1');
   if (!existing.rowCount) {
     await seed();
-  }
-
-  // Ensure pg-mem compatibility for local dev
-  if (!process.env.DATABASE_URL?.includes('neon') && !process.env.DATABASE_URL?.includes('postgres://')) {
-    console.log('Using pg-mem for local development');
   }
 }
 
@@ -145,11 +166,13 @@ async function seed() {
   }
 
   // Create sample subscriptions
-  const statuses: Array<'active' | 'active' | 'active' | 'confirmed' | 'quotation' | 'paused'> =
-    ['active', 'active', 'active', 'confirmed', 'quotation', 'paused'];
+  const subIds: string[] = [];
+  const statuses: Array<'active' | 'active' | 'active' | 'confirmed' | 'quotation' | 'closed'> =
+    ['active', 'active', 'active', 'confirmed', 'quotation', 'closed'];
 
   for (let i = 0; i < 24; i++) {
     const subId = randomUUID();
+    subIds.push(subId);
     const planIdx = i % 3;
     await db.query(
       `INSERT INTO subscriptions (id, subscription_number, customer_id, plan_id, start_date, status, payment_terms, created_by)
@@ -176,7 +199,7 @@ async function seed() {
     await db.query(
       `INSERT INTO invoices (id, invoice_number, subscription_id, customer_id, status, subtotal_cents, tax_total_cents, grand_total_cents, billing_period_start, billing_period_end)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-      [invId, `INV-${String(2001 + i).padStart(4, '0')}`, `s${i % 24}`, customerProfileId, status, amount, 0, amount, `2026-${month}-01`, `2026-${month}-28`]
+      [invId, `INV-${String(2001 + i).padStart(4, '0')}`, subIds[i % 24], customerProfileId, status, amount, 0, amount, `2026-${month}-01`, `2026-${month}-28`]
     );
 
     if (i <= 29) {
