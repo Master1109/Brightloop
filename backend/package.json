@@ -5,6 +5,7 @@
   "description": "Brightloop REST API for authentication, subscriptions, and billing.",
   "main": "server/main.ts",
   "scripts": {
+    "build": "tsc --noEmit",
     "dev": "tsx watch --env-file=.env server/main.ts",
     "start": "tsx --env-file=.env server/main.ts",
     "test": "tsx --env-file=.env --test server/*.test.ts",
