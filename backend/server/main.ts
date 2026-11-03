@@ -192,6 +192,10 @@ async function bootstrap() {
 
   const api = app.getHttpAdapter().getInstance();
 
+  // CORS - explicit origin for production
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  app.enableCors({ origin: frontendUrl, credentials: true });
+
   // Health check
   api.get('/health', (_: any, res: any) => res.json({ ok: true, demo: false }));
 
