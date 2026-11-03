@@ -57,7 +57,7 @@ export function CountUp({
 export function Logo({ onClick, light = false }: { onClick?: () => void; light?: boolean }) {
   return (
     <button type="button" className={`bl-logo ${light ? 'bl-logo-light' : ''}`} onClick={onClick} aria-label="Brightloop home">
-      <span className="bl-logo-mark"><LoopIcon size={16} strokeWidth={2.6} /></span>
+      <span className="bl-logo-mark"><img src="/logo.png" alt="Brightloop" width={28} height={28} style={{ objectFit: 'contain', width: '100%', height: '100%', display: 'block' }} /></span>
       Brightloop
     </button>
   );
