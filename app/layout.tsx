@@ -1,6 +1,7 @@
 import '@fontsource-variable/inter';
 import './globals.css';
 import { Providers } from './providers';
+import Preloader from '../components/preloader';
 import type { Viewport } from 'next';
 
 export const metadata = {
@@ -27,7 +28,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         />
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <Preloader />
+          {children}
+        </Providers>
       </body>
     </html>
   );
