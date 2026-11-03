@@ -3978,6 +3978,11 @@ body.preloader-locked {
   overflow: hidden !important;
 }
 
+html.bl-no-preloader #bl-preloader,
+html.bl-no-preloader .bl-preloader {
+  display: none !important;
+}
+
 .bl-preloader {
   position: fixed;
   inset: 0;

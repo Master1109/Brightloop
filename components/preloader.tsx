@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 
-// Word sequence matching the rapid kinetic typography in the reference video
+// Word sequence matching the kinetic typography in the reference video
 const SEQUENCE = [
   { text: 'METRICS', outlined: [1, 4], theme: 'light' },
   { text: 'REVENUE', outlined: [2, 5], theme: 'light' },
@@ -10,7 +10,6 @@ const SEQUENCE = [
 ];
 
 export default function Preloader() {
-  const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState(0);
   const [exiting, setExiting] = useState(false);
   const [destroyed, setDestroyed] = useState(false);
@@ -22,11 +21,11 @@ export default function Preloader() {
       try {
         sessionStorage.setItem('bl_preloaded', 'true');
       } catch {}
-    }, 650);
+    }, 750);
   }, []);
 
   useEffect(() => {
-    // Only show once per session
+    // If already preloaded in this session, destroy immediately
     try {
       if (sessionStorage.getItem('bl_preloaded') === 'true') {
         setDestroyed(true);
@@ -34,13 +33,12 @@ export default function Preloader() {
       }
     } catch {}
 
-    setMounted(true);
     document.body.classList.add('preloader-locked');
 
-    // Fast, snappy sequence: ~300ms per word, total ~1.1s
-    const t1 = setTimeout(() => setStep(1), 320);
-    const t2 = setTimeout(() => setStep(2), 640);
-    const t3 = setTimeout(() => dismiss(), 1150);
+    // Cinematic word transitions
+    const t1 = setTimeout(() => setStep(1), 480);
+    const t2 = setTimeout(() => setStep(2), 960);
+    const t3 = setTimeout(() => dismiss(), 1750);
 
     return () => {
       clearTimeout(t1);
@@ -56,14 +54,17 @@ export default function Preloader() {
     }
   }, [destroyed]);
 
-  if (!mounted || destroyed) return null;
+  if (destroyed) return null;
 
   const current = SEQUENCE[step] || SEQUENCE[0];
   const outlinedSet = new Set(current.outlined);
   const isFinalStep = step === 2;
 
+  // IMPORTANT: Renders HTML on the server and client from frame 0
+  // Zero hydration delay - never flashes landing page!
   return (
     <div
+      id="bl-preloader"
       className={`bl-preloader ${exiting ? 'bl-preloader-exit' : ''}`}
       onClick={dismiss}
       role="status"
@@ -78,7 +79,7 @@ export default function Preloader() {
                 key={`${step}-${i}-${char}`}
                 className={`bl-preloader-char ${isOutlined ? 'is-outlined' : 'is-solid'}`}
                 style={{
-                  animationDelay: `${i * 22}ms`,
+                  animationDelay: `${i * 25}ms`,
                 }}
               >
                 {char}
@@ -88,7 +89,7 @@ export default function Preloader() {
           {isFinalStep && (
             <span
               className="bl-preloader-char bl-preloader-mark"
-              style={{ animationDelay: `${current.text.length * 22}ms` }}
+              style={{ animationDelay: `${current.text.length * 25}ms` }}
             >
               !
             </span>
