@@ -17,7 +17,7 @@ export const viewport: Viewport = {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -28,7 +28,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{if(sessionStorage.getItem('bl_preloaded')==='true'){document.documentElement.classList.add('bl-no-preloader');}}catch(e){}`,
+            __html: `try{if(sessionStorage.getItem('bl_preloaded')==='true'){var s=document.createElement('style');s.id='bl-hide-preloader';s.textContent='#bl-preloader{display:none!important}';document.head.appendChild(s);}}catch(e){}`,
           }}
         />
       </head>

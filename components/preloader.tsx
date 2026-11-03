@@ -69,6 +69,7 @@ export default function Preloader() {
       onClick={dismiss}
       role="status"
       aria-label="Loading Brightloop"
+      suppressHydrationWarning
     >
       <div className="bl-preloader-center">
         <div className={`bl-preloader-word ${current.theme === 'dark' ? 'theme-dark' : 'theme-light'}`}>
