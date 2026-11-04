@@ -58,7 +58,11 @@ cp .env.example .env
 ```sh
 npm run dev
 ```
-The API server starts at: **http://localhost:4000**
+The API server starts at `http://localhost:8080` locally, or on Railway at the host and port supplied by Railway.
+
+### Railway deployment
+
+Set the Railway service root directory to `backend` and use `npm start`. Add `DATABASE_URL`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `FRONTEND_URL`, and `NODE_ENV=production` as Railway Variables. Railway supplies `PORT`; if you set it manually, use `8080`. Enable public networking and verify `https://YOUR-RAILWAY-DOMAIN/health` returns `{ "ok": true, "demo": false }`.
 
 ---
 

@@ -11,7 +11,6 @@ const handler = NextAuth({
         const rawBackend = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:4000';
         const cleanBackend = rawBackend.replace(/\/+$/, '');
         const backendUrl = cleanBackend.startsWith('http') ? cleanBackend : `https://${cleanBackend}`;
-
         const response = await fetch(`${backendUrl}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
-const rawBackend = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:4000';
+const rawBackend = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || (process.env.NODE_ENV === 'production' ? '' : 'http://127.0.0.1:8080');
+if (process.env.NODE_ENV === 'production' && (!rawBackend || /localhost|127\.0\.0\.1|railway\.internal/i.test(rawBackend))) {
+  throw new Error('BACKEND_URL must be the public Railway HTTPS URL in production');
+}
 const cleanBackend = rawBackend.replace(/\/+$/, '');
 const dest = cleanBackend.startsWith('http') ? cleanBackend : `https://${cleanBackend}`;
 
