@@ -8,11 +8,13 @@ const nextConfig = {
   },
   // Ensure API routes can make external calls
   async rewrites() {
+    const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:4000';
+    const dest = backendUrl.startsWith('http') ? backendUrl : `https://${backendUrl}`;
     return [
       // Backend health check passthrough (optional)
       {
         source: '/api/backend/health',
-        destination: `${process.env.BACKEND_URL || 'http://127.0.0.1:4000'}/health`,
+        destination: `${dest}/health`,
       },
     ];
   },
