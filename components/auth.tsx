@@ -70,8 +70,13 @@ export default function Auth({ onSuccess, onBack }: { onSuccess: () => void | Pr
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ...b, token: reset }),
                   });
-                  const d = await r.json();
-                  if (!r.ok) throw Error(d.error);
+                  let d: any = {};
+                  try {
+                    d = await r.json();
+                  } catch {
+                    throw Error(r.status === 502 ? 'Backend service unreachable (502 Bad Gateway). Please verify Railway backend URL in Vercel settings.' : ('Authentication service error (' + r.status + ')'));
+                  }
+                  if (!r.ok) throw Error(d.error || 'Authentication request failed');
                   if (current === 'forgot') { setError(d.message); return; }
                   if (current === 'reset') { window.location.href = '/'; return; }
                 }

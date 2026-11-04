@@ -192,9 +192,11 @@ async function bootstrap() {
 
   const api = app.getHttpAdapter().getInstance();
 
-  // CORS - explicit origin for production
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-  app.enableCors({ origin: frontendUrl, credentials: true });
+  // CORS - allow configured frontend or any origin in production proxy
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  });
 
   // Health check
   api.get('/health', (_: any, res: any) => res.json({ ok: true, demo: false }));
@@ -886,7 +888,7 @@ async function bootstrap() {
 
   // Start server
   const port = Number(process.env.PORT || 4000);
-  await app.listen(port, '127.0.0.1');
+  await app.listen(port, '0.0.0.0');
   console.log(`Brightloop API http://localhost:${port} (PostgreSQL)`);
 
   // BullMQ workers (if Redis configured)
