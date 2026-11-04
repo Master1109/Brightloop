@@ -12,7 +12,10 @@ const usePgMem = !process.env.DATABASE_URL || (!process.env.DATABASE_URL.include
 
 function createDatabase() {
   if (!usePgMem) {
-    return new Pool({ connectionString: process.env.DATABASE_URL });
+    const ssl = process.env.NODE_ENV === 'production' || process.env.PGSSL === 'true'
+      ? { rejectUnauthorized: false }
+      : undefined;
+    return new Pool({ connectionString: process.env.DATABASE_URL, ...(ssl ? { ssl } : {}) });
   }
   const mem = newDb();
   mem.public.registerFunction({

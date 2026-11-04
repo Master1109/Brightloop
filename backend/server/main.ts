@@ -183,7 +183,6 @@ async function bootstrap() {
   await init();
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: ['error', 'warn'] });
-  app.enableCors({ origin: true, credentials: true });
   app.use((req: any, res: any, next: any) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     next();
@@ -193,8 +192,15 @@ async function bootstrap() {
   const api = app.getHttpAdapter().getInstance();
 
   // CORS - explicit origin for production
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-  app.enableCors({ origin: frontendUrl, credentials: true });
+  const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
+    .split(',').map(value => value.trim()).filter(Boolean);
+  app.enableCors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error('Origin is not allowed by CORS'));
+    },
+    credentials: true,
+  });
 
   // Health check
   api.get('/health', (_: any, res: any) => res.json({ ok: true, demo: false }));
@@ -885,9 +891,10 @@ async function bootstrap() {
   });
 
   // Start server
-  const port = Number(process.env.PORT || 4000);
-  await app.listen(port, '127.0.0.1');
-  console.log(`Brightloop API http://localhost:${port} (PostgreSQL)`);
+  const port = Number(process.env.PORT) || 8080;
+  const host = '0.0.0.0';
+  await app.listen(port, host);
+  console.log(`Brightloop API listening on http://${host}:${port} (PostgreSQL)`);
 
   // BullMQ workers (if Redis configured)
   if (process.env.REDIS_HOST) {

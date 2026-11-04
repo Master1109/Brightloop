@@ -8,7 +8,7 @@ const handler = NextAuth({
     credentials: { email: { label: 'Email', type: 'email' }, password: { label: 'Password', type: 'password' } },
     async authorize(credentials) {
       try {
-        const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:4000';
+        const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:8080';
         const response = await fetch(`${backendUrl}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
