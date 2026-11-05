@@ -28,13 +28,15 @@ services:
       - key: MAIL_FROM
         sync: false
       - key: REDIS_HOST
-        fromService: brightloop-redis
-        type: redis
-        property: host
+        fromService:
+          type: redis
+          name: brightloop-redis
+          property: host
       - key: REDIS_PORT
-        fromService: brightloop-redis
-        type: redis
-        property: port
+        fromService:
+          type: redis
+          name: brightloop-redis
+          property: port
 
   - type: worker
     name: brightloop-billing
@@ -52,13 +54,15 @@ services:
       - key: SERVICE_TYPE
         value: worker
       - key: REDIS_HOST
-        fromService: brightloop-redis
-        type: redis
-        property: host
+        fromService:
+          type: redis
+          name: brightloop-redis
+          property: host
       - key: REDIS_PORT
-        fromService: brightloop-redis
-        type: redis
-        property: port
+        fromService:
+          type: redis
+          name: brightloop-redis
+          property: port
 
 databases:
   - name: brightloop-db
