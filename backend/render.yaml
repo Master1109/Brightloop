@@ -28,15 +28,9 @@ services:
       - key: MAIL_FROM
         sync: false
       - key: REDIS_HOST
-        fromService:
-          type: redis
-          name: brightloop-redis
-          property: host
+        sync: false
       - key: REDIS_PORT
-        fromService:
-          type: redis
-          name: brightloop-redis
-          property: port
+        sync: false
 
   - type: worker
     name: brightloop-billing
@@ -54,21 +48,6 @@ services:
       - key: SERVICE_TYPE
         value: worker
       - key: REDIS_HOST
-        fromService:
-          type: redis
-          name: brightloop-redis
-          property: host
+        sync: false
       - key: REDIS_PORT
-        fromService:
-          type: redis
-          name: brightloop-redis
-          property: port
-
-databases:
-  - name: brightloop-db
-    databaseName: brightloop
-    plan: free
-
-redis:
-  - name: brightloop-redis
-    plan: free
+        sync: false
