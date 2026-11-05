@@ -890,18 +890,28 @@ async function bootstrap() {
     }
   });
 
-  // Start server
-  const port = Number(process.env.PORT) || 8080;
-  const host = '0.0.0.0';
-  await app.listen(port, host);
-  console.log(`Brightloop API listening on http://${host}:${port} (PostgreSQL)`);
+  // Start server (web service only)
+  const isWorker = process.env.SERVICE_TYPE === 'worker';
 
-  // BullMQ workers (if Redis configured)
-  if (process.env.REDIS_HOST) {
+  if (!isWorker) {
+    const port = Number(process.env.PORT) || 8080;
+    const host = '0.0.0.0';
+    await app.listen(port, host);
+    console.log(`Brightloop API listening on http://${host}:${port} (PostgreSQL)`);
+  }
+
+  // BullMQ workers (worker service only, or both if not separated)
+  if (process.env.REDIS_HOST && (isWorker || process.env.ENABLE_WORKER === 'true')) {
     const connection = { host: process.env.REDIS_HOST, port: Number(process.env.REDIS_PORT || 6379) };
     const queue = new Queue('billing', { connection });
     new Worker('billing', async () => bill(), { connection, concurrency: 1 });
     await queue.upsertJobScheduler('hourly-billing', { every: 3600000 }, { name: 'invoice-due', data: {}, opts: { attempts: 5, backoff: { type: 'exponential', delay: 1000 }, removeOnComplete: 100, removeOnFail: 100 } });
+    console.log('BullMQ billing worker started');
+
+    if (isWorker) {
+      // Keep worker process alive
+      process.stdin.resume();
+    }
   }
 }
 
