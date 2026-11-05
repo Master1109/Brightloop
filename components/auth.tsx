@@ -14,6 +14,9 @@ export default function Auth({ onSuccess, onBack }: { onSuccess: () => void | Pr
   const current = reset ? 'reset' : mode;
   const showTabs = current === 'login' || current === 'register';
 
+  // Local backend URL helper
+  const getBackendUrl = () => process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:4000';
+
   const go = (m: 'login' | 'register' | 'forgot') => { setMode(m); setError(''); };
 
   const title = current === 'login' ? 'Welcome back' : current === 'register' ? 'Create your account' : current === 'forgot' ? 'Reset your password' : 'Choose a new password';
@@ -65,7 +68,7 @@ export default function Auth({ onSuccess, onBack }: { onSuccess: () => void | Pr
               const b = Object.fromEntries(new FormData(e.currentTarget));
               try {
                 if (current !== 'login') {
-                  const r = await fetch(`/backend/auth/${current}`, {
+                  const r = await fetch(`${getBackendUrl()}/auth/${current}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ ...b, token: reset }),
@@ -74,7 +77,7 @@ export default function Auth({ onSuccess, onBack }: { onSuccess: () => void | Pr
                   try {
                     d = await r.json();
                   } catch {
-                    throw Error(r.status === 502 ? 'Backend service unreachable (502 Bad Gateway). Please verify Railway backend URL in Vercel settings.' : ('Authentication service error (' + r.status + ')'));
+                    throw Error('Authentication service returned invalid response');
                   }
                   if (!r.ok) throw Error(d.error || 'Authentication request failed');
                   if (current === 'forgot') { setError(d.message); return; }

@@ -2,15 +2,14 @@ import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
 const handler = NextAuth({
-  secret: process.env.NEXTAUTH_SECRET || 'brightloop-production-jwt-secret-2026-auth-fallback',
+  secret: process.env.NEXTAUTH_SECRET || 'brightloop-local-nextauth-secret-2026',
   providers: [CredentialsProvider({
     name: 'Brightloop',
     credentials: { email: { label: 'Email', type: 'email' }, password: { label: 'Password', type: 'password' } },
     async authorize(credentials) {
       try {
-        const rawBackend = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:4000';
-        const cleanBackend = rawBackend.replace(/\/+$/, '');
-        const backendUrl = cleanBackend.startsWith('http') ? cleanBackend : `https://${cleanBackend}`;
+        // Local backend fallback
+        const backendUrl = process.env.BACKEND_URL || 'http://127.0.0.1:4000';
         const response = await fetch(`${backendUrl}/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
